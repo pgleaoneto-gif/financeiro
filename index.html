@@ -14,9 +14,12 @@ $('f').onsubmit=e=>{e.preventDefault();let v=money($('valor').value);if(!v)retur
 $('export').onclick=async()=>{
   let a=load();
   if(!a.length)return alert('Não há lançamentos.');
-  let nome='Gastos_Offline_'+new Date().toISOString().slice(0,10)+'.json';
+  let base='Gastos_Offline_'+new Date().toISOString().slice(0,10);
+  let nomeJson=base+'.json', nomeCompartilhar=base+'.txt';
   let conteudo=JSON.stringify({app:'Controle Financeiro Offline',version:1,exportado_em:new Date().toISOString(),items:a},null,2);
-  let file=new File([conteudo],nome,{type:'application/json'});
+  // Android/WhatsApp costuma aceitar documentos text/plain com mais consistência que application/json.
+  // O conteúdo continua sendo JSON e o programa do computador aceita .txt ou .json.
+  let file=new File([conteudo],nomeCompartilhar,{type:'text/plain'});
   try{
     if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
       await navigator.share({title:'Gastos do Meu Financeiro',text:'Arquivo para importar no Meu Controle Financeiro do computador.',files:[file]});
@@ -28,7 +31,7 @@ $('export').onclick=async()=>{
     if(err && err.name==='AbortError')return;
   }
   let blob=new Blob([conteudo],{type:'application/json'}),u=URL.createObjectURL(blob),el=document.createElement('a');
-  el.href=u;el.download=nome;document.body.appendChild(el);el.click();el.remove();setTimeout(()=>URL.revokeObjectURL(u),1000);
+  el.href=u;el.download=nomeJson;document.body.appendChild(el);el.click();el.remove();setTimeout(()=>URL.revokeObjectURL(u),1000);
   a.forEach(x=>x.exportado=true);save(a);
   alert('Seu celular não abriu o compartilhamento. O arquivo foi baixado normalmente.');
 };
